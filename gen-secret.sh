@@ -6,15 +6,8 @@ SECRET_NAME=$1
 regex="docker login -u (.+) -p (.+) -e (.+) (.+)"
 if [[ $(aws ecr get-login) =~ $regex ]]
 then
-  login=$(echo "${BASH_REMATCH[1]}:${BASH_REMATCH[2]}" | base64)
-  echo $login
-  echo "Configuring registry ${BASH_REMATCH[4]:8}..."
-  dockerconfig="{\"auths\":{\"${BASH_REMATCH[4]:8}\":{\"auth\": \"${login}\"}}}"
-  echo $dockerconfig
-  dockerconfigjson=$(echo ${dockerconfig} | base64)
-  echo $dockerconfigjson
-  secret="apiVersion: v1\nkind: Secret\nmetadata:\n  name: $SECRET_NAME\ndata:\n  .dockerconfigjson: ${dockerconfigjson}\ntype: kubernetes.io/dockerconfigjson"
-  echo -e ${secret} | kubectl replace -f - --force
+  kubectl delete secret $SECRET_NAME || echo 'The secret $SECRET_NAME does not exists'
+  kubectl create secret docker-registry $SECRET_NAME --docker-server=BASH_REMATCH[4] --docker-username=BASH_REMATCH[1] --docker-password=BASH_REMATCH[2] --docker-email=BASH_REMATCH[3]
   cat <<EOF
 In order to use the new secret to pull images, add the following to your Pod definition:
     spec:
