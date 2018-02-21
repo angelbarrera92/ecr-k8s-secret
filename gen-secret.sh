@@ -7,7 +7,7 @@ regex="docker login -u (.+) -p (.+) -e (.+) (.+)"
 if [[ $(aws ecr get-login) =~ $regex ]]
 then
   kubectl delete secret $SECRET_NAME || echo 'The secret $SECRET_NAME does not exists'
-  kubectl create secret docker-registry $SECRET_NAME --docker-server=$BASH_REMATCH[4] --docker-username=$BASH_REMATCH[1] --docker-password=$BASH_REMATCH[2] --docker-email=$BASH_REMATCH[3]
+  kubectl create secret docker-registry $SECRET_NAME --docker-server=${BASH_REMATCH[4]} --docker-username=${BASH_REMATCH[1]} --docker-password=${BASH_REMATCH[2]} --docker-email=${BASH_REMATCH[3]}
   cat <<EOF
 In order to use the new secret to pull images, add the following to your Pod definition:
     spec:
