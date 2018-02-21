@@ -6,10 +6,13 @@ SECRET_NAME=$1
 regex="docker login -u (.+) -p (.+) -e (.+) (.+)"
 if [[ $(aws ecr get-login) =~ $regex ]]
 then
-  login=$(echo "${BASH_REMATCH[1]}:${BASH_REMATCH[2]}" | base64 -d)
+  login=$(echo "${BASH_REMATCH[1]}:${BASH_REMATCH[2]}" | base64)
+  echo $login
   echo "Configuring registry ${BASH_REMATCH[4]:8}..."
   dockerconfig="{\"auths\":{\"${BASH_REMATCH[4]:8}\":{\"auth\": \"${login}\"}}}"
-  dockerconfigjson=$(echo ${dockerconfig} | base64 -d)
+  echo $dockerconfig
+  dockerconfigjson=$(echo ${dockerconfig} | base64)
+  echo $dockerconfigjson
   secret="apiVersion: v1\nkind: Secret\nmetadata:\n  name: $SECRET_NAME\ndata:\n  .dockerconfigjson: ${dockerconfigjson}\ntype: kubernetes.io/dockerconfigjson"
   echo -e ${secret} | kubectl replace -f - --force
   cat <<EOF
